@@ -19,9 +19,13 @@ dependencies:
     - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/client-secret.json
 test:
   override:
+    - echo y | android update sdk --no-ui --all --filter tools,platform-tools,build-tools-21.1.2,android-21,extra-google-m2repository,extra-google-google_play_services,extra-android-support
+    - chmod +x gradlew
+    - ANDROID_HOME=/usr/local/android-sdk-linux ./gradlew dependencies
     - ./gradlew testVanillaDebugUnitTest -PdisablePreDex
     - echo "y" | sudo /opt/google-cloud-sdk/bin/gcloud beta test android run --app app/build/outputs/apk/app-vanilla-debug.apk --test app/build/outputs/apk/app-vanilla-debug-androidTest.apk --device-ids Nexus5 --os-version-ids 22 --locales en --orientations portrait
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
     - sudo /opt/google-cloud-sdk/bin/gsutil -m cp -r -U `sudo /opt/google-cloud-sdk/bin/gsutil ls gs://$TEST_LAB_BUCKET | tail -1` $CIRCLE_ARTIFACTS/ | true
+    
